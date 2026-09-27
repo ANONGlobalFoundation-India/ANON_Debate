@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ANON Global Foundation — Debate Championship</title>
+<style>
+  :root{
+    --red:#EE3134; --red-dark:#C81E22; --red-light:#FF6F72;
+    --blue:#365BA9; --blue-dark:#24407D; --blue-light:#7096D6;
+    --gold:#FFC93C;
+    --ink:#1B2430; --ink-soft:#5B6473;
+    --bg:#F5F8FF; --card:#FFFFFF; --line:#E3E9F5;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; min-height:100%;
+    background:var(--bg); color:var(--ink);
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    background-image:
+      radial-gradient(circle at 4% 8%, rgba(238,49,52,0.07), transparent 32%),
+      radial-gradient(circle at 96% 12%, rgba(54,91,169,0.08), transparent 34%),
+      radial-gradient(circle at 90% 92%, rgba(238,49,52,0.06), transparent 30%),
+      radial-gradient(circle at 6% 88%, rgba(54,91,169,0.06), transparent 30%);
+  }
+
+  header{ padding:2.2rem 1.5rem 1.4rem; text-align:center; }
+  header .logo-row{ display:flex; align-items:center; justify-content:center; margin-bottom:1.2rem; }
+  header img.logo{ display:block; height:78px; width:auto; }
+  h1{ font-size:clamp(2rem, 5vw, 2.9rem); margin:0 0 0.5rem; font-weight:800; color:var(--red); letter-spacing:-0.01em; }
+  header p.sub{ color:var(--blue-dark); font-size:1.1rem; font-weight:600; max-width:640px; margin:0 auto; line-height:1.5; }
+
+  main{ max-width:980px; margin:0 auto; padding:0.8rem 1.5rem 4rem; display:flex; flex-direction:column; gap:1.6rem; }
+
+  .stage{
+    background:var(--card); border:3px solid var(--line); border-radius:20px;
+    padding:1.8rem 1.8rem; box-shadow:0 10px 28px rgba(27,36,48,0.06);
+    position:relative;
+  }
+  .stage.locked{ opacity:0.5; }
+  .stage-head{ display:flex; align-items:center; gap:0.9rem; margin-bottom:1.3rem; }
+  .stage-num{
+    width:38px; height:38px; border-radius:50%;
+    background:var(--ink); color:#fff; font-weight:800; font-size:1.05rem;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .stage.team .stage-num{ background:var(--blue); }
+  .stage.topic .stage-num{ background:var(--red); }
+  .stage.toss .stage-num{ background:var(--gold); color:var(--ink); }
+  .stage.score .stage-num{ background:var(--ink); }
+  .stage.done .stage-num::after{ content:"✓"; }
+  .stage-title{ font-size:1.4rem; font-weight:800; margin:0; }
+  .stage-desc{ font-size:0.95rem; font-weight:400; color:var(--ink-soft); margin:-0.7rem 0 1.2rem 3rem; }
+
+  textarea{
+    width:100%; min-height:120px; resize:vertical;
+    font-family:'Segoe UI', Arial, sans-serif; font-size:0.95rem; font-weight:400;
+    padding:0.8rem; border-radius:10px; border:2px solid var(--line);
+    background:#FAFBFE; color:var(--ink); line-height:1.5;
+  }
+  .field-label{ font-size:0.85rem; font-weight:700; color:var(--ink-soft); margin-bottom:0.4rem; display:block; }
+
+  .pill-row{ display:flex; flex-wrap:wrap; gap:0.6rem; margin:0.9rem 0; }
+  .pill-btn{
+    font-size:0.95rem; font-weight:700; padding:0.55rem 1.3rem; border-radius:999px;
+    border:2px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+  }
+  .pill-btn.active{ background:var(--blue); border-color:var(--blue); color:#fff; }
+
+  .btn{
+    font-size:1.05rem; font-weight:700; padding:0.8rem 2.1rem; border-radius:999px;
+    border:none; cursor:pointer; color:#fff; transition:transform 0.15s ease, opacity 0.15s ease;
+  }
+  .btn:hover:not(:disabled){ transform:translateY(-2px); }
+  .btn:disabled{ opacity:0.45; cursor:not-allowed; }
+  .btn.blue{ background:var(--blue); box-shadow:0 8px 18px rgba(54,91,169,0.3); }
+  .btn.red{ background:var(--red); box-shadow:0 8px 18px rgba(238,49,52,0.3); }
+  .btn.ghost{ background:transparent; color:var(--ink-soft); border:2px solid var(--line); box-shadow:none; }
+  .btn.gold{ background:var(--gold); color:var(--ink); box-shadow:0 8px 18px rgba(255,201,60,0.35); }
+
+  .warn-box{
+    background:#FFF6E5; border:2px solid var(--gold); border-radius:12px;
+    padding:0.8rem 1rem; font-size:0.9rem; font-weight:600; color:#8A6100; margin:0.9rem 0;
+  }
+  .error-box{
+    background:#FFEBEC; border:2px solid var(--red-light); border-radius:12px;
+    padding:0.8rem 1rem; font-size:0.9rem; font-weight:600; color:var(--red-dark); margin:0.9rem 0;
+  }
+
+  .teams-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-top:1.2rem; }
+  @media (max-width:640px){ .teams-grid{ grid-template-columns:1fr; } }
+  .team-card{ border-radius:16px; padding:1.2rem 1.3rem; }
+  .team-card.a{ background:#EEF2FB; border:2px solid var(--blue-light); }
+  .team-card.b{ background:#FDEEEE; border:2px solid var(--red-light); }
+  .team-card h3{ margin:0 0 0.7rem; font-size:1.15rem; font-weight:800; }
+  .team-card.a h3{ color:var(--blue-dark); }
+  .team-card.b h3{ color:var(--red-dark); }
+  .team-card ul{ margin:0; padding-left:1.2rem; font-size:1rem; font-weight:600; line-height:1.9; }
+  .bench-note{ margin-top:1rem; font-size:0.88rem; font-weight:600; color:var(--ink-soft); }
+
+  .wheel-row{ display:flex; flex-direction:column; align-items:center; gap:1.1rem; margin-top:1rem; }
+  .wheel-wrap{ position:relative; width:min(340px, 82vw); aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; }
+  canvas.wheel-canvas{ width:100%; height:100%; border-radius:50%; filter:drop-shadow(0 12px 26px rgba(27,36,48,0.22)); }
+  .pointer{
+    position:absolute; top:-4px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent;
+    border-top:28px solid var(--gold); z-index:5; filter:drop-shadow(0 3px 4px rgba(0,0,0,0.25));
+  }
+  .hub{ position:absolute; width:17%; height:17%; border-radius:50%; background:#fff; border:4px solid var(--ink); z-index:4; }
+  .topic-result{ font-size:1.3rem; font-weight:800; color:var(--red-dark); text-align:center; }
+  .remaining-note{ font-size:0.85rem; font-weight:600; color:var(--ink-soft); }
+
+  .coin-area{ display:flex; flex-direction:column; align-items:center; gap:1.2rem; margin-top:1rem; }
+  .coin{
+    width:220px; height:140px; perspective:1000px;
+  }
+  .coin-inner{
+    position:relative; width:100%; height:100%; transform-style:preserve-3d;
+    transition:transform 2.4s cubic-bezier(0.2,0.7,0.2,1);
+    border-radius:16px;
+  }
+  .coin-face{
+    position:absolute; inset:0; border-radius:16px; backface-visibility:hidden;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; font-weight:800; color:#fff; text-align:center; padding:0.6rem;
+    box-shadow:0 10px 24px rgba(27,36,48,0.25);
+  }
+  .coin-face.front{ background:linear-gradient(135deg, var(--blue), var(--blue-dark)); }
+  .coin-face.back{ background:linear-gradient(135deg, var(--red), var(--red-dark)); transform:rotateY(180deg); }
+  .toss-result{ font-size:1.2rem; font-weight:800; text-align:center; }
+  .side-choice-row{ display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap; }
+  .side-summary{
+    display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; margin-top:0.8rem;
+  }
+  .side-tag{ font-size:0.95rem; font-weight:700; padding:0.5rem 1.1rem; border-radius:999px; color:#fff; }
+  .side-tag.a{ background:var(--blue); }
+  .side-tag.b{ background:var(--red); }
+
+  .score-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; margin-top:1rem; }
+  @media (max-width:640px){ .score-grid{ grid-template-columns:1fr; } }
+  .score-col{ border-radius:16px; padding:1.2rem 1.3rem; }
+  .score-col.a{ background:#EEF2FB; border:2px solid var(--blue-light); }
+  .score-col.b{ background:#FDEEEE; border:2px solid var(--red-light); }
+  .score-col h4{ margin:0 0 0.9rem; font-size:1.1rem; font-weight:800; }
+  .score-col.a h4{ color:var(--blue-dark); }
+  .score-col.b h4{ color:var(--red-dark); }
+  .criteria-row{ margin-bottom:0.9rem; }
+  .criteria-label{ display:flex; justify-content:space-between; font-size:0.85rem; font-weight:700; color:var(--ink-soft); margin-bottom:0.25rem; }
+  .criteria-label span.wt{ color:var(--ink); }
+  input[type=range]{ width:100%; accent-color:var(--ink); }
+  .score-total{ margin-top:1rem; font-size:1.4rem; font-weight:800; text-align:center; }
+  .score-col.a .score-total{ color:var(--blue-dark); }
+  .score-col.b .score-total{ color:var(--red-dark); }
+
+  .verdict-box{ margin-top:1.3rem; text-align:center; }
+  .verdict-line{ font-size:1.25rem; font-weight:700; color:var(--ink); margin-bottom:0.8rem; }
+  .tiebreak-row{ display:flex; gap:0.8rem; justify-content:center; flex-wrap:wrap; }
+
+  select{
+    font-size:1rem; font-weight:600; padding:0.6rem 0.9rem; border-radius:10px;
+    border:2px solid var(--line); background:#FAFBFE; color:var(--ink); width:100%;
+  }
+  .finalist-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-top:1rem; }
+  @media (max-width:640px){ .finalist-grid{ grid-template-columns:1fr; } }
+  .finalist-col label{ font-size:0.85rem; font-weight:700; color:var(--ink-soft); display:block; margin-bottom:0.4rem; }
+
+  .champion-line{ font-size:1.6rem; font-weight:800; text-align:center; color:var(--gold); text-shadow:0 2px 0 rgba(0,0,0,0.08); }
+
+  footer{ text-align:center; padding:1.2rem 1.5rem 2.2rem; color:var(--ink-soft); font-size:0.9rem; font-weight:600; }
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(27,36,48,0.55);
+    display:flex; align-items:center; justify-content:center; z-index:100;
+    opacity:0; pointer-events:none; transition:opacity 0.25s ease; padding:1.5rem;
+  }
+  .modal-overlay.show{ opacity:1; pointer-events:auto; }
+  .confetti-canvas{ position:fixed; inset:0; z-index:101; pointer-events:none; }
+  .modal-card{
+    position:relative; z-index:102; background:var(--card); border-radius:24px;
+    padding:2.4rem 2.6rem; max-width:520px; width:100%; text-align:center;
+    box-shadow:0 24px 60px rgba(20,26,34,0.35); transform:scale(0.85);
+    transition:transform 0.28s cubic-bezier(0.2,0.8,0.3,1.2); border-top:10px solid var(--gold);
+  }
+  .modal-overlay.show .modal-card{ transform:scale(1); }
+  .modal-eyebrow{ font-size:0.95rem; font-weight:700; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:0.9rem; }
+  .modal-headline{ font-size:1.3rem; font-weight:400; color:var(--ink); line-height:1.4; margin-bottom:0.4rem; }
+  .modal-value{ font-size:clamp(1.6rem, 5vw, 2.3rem); font-weight:800; line-height:1.3; margin:0.3rem 0 1.6rem; color:var(--gold); }
+  .modal-continue{ font-size:1.05rem; font-weight:700; padding:0.75rem 2.2rem; border-radius:999px; border:none; cursor:pointer; color:#fff; background:var(--ink); }
+
+  .reset-all-row{ text-align:center; margin-top:0.5rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-row">
+    <img class="logo" src="data:image/gif;base64,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" alt="ANON Global Foundation logo">
+  </div>
+  <h1>Debate Championship</h1>
+  <p class="sub">Wellness Week — Team Round &amp; Grand Final</p>
+</header>
+
+<main>
+
+  <!-- STAGE 1: TEAM BUILDER -->
+  <section class="stage team" id="stage1">
+    <div class="stage-head">
+      <div class="stage-num">1</div>
+      <h2 class="stage-title">Build the Teams</h2>
+    </div>
+    <p class="stage-desc">Add every participant, pick a team size, then shuffle. Teams are formed at random.</p>
+
+    <label class="field-label">Participants (one per line)</label>
+    <textarea id="participantsInput" placeholder="One name per line"></textarea>
+
+    <label class="field-label" style="margin-top:1rem;">Team size</label>
+    <div class="pill-row" id="teamSizeRow">
+      <button class="pill-btn" data-size="2">2 vs 2</button>
+      <button class="pill-btn active" data-size="3">3 vs 3</button>
+      <button class="pill-btn" data-size="4">4 vs 4</button>
+      <button class="pill-btn" data-size="8">8 vs 8</button>
+    </div>
+
+    <div id="teamError"></div>
+
+    <div style="text-align:center; margin-top:0.6rem;">
+      <button class="btn blue" id="shuffleBtn">Shuffle &amp; Form Teams</button>
+    </div>
+
+    <div class="teams-grid" id="teamsGrid" style="display:none;">
+      <div class="team-card a">
+        <h3>Team A</h3>
+        <ul id="teamAList"></ul>
+      </div>
+      <div class="team-card b">
+        <h3>Team B</h3>
+        <ul id="teamBList"></ul>
+      </div>
+    </div>
+    <div class="bench-note" id="benchNote"></div>
+  </section>
+
+  <!-- STAGE 2: ROUND 1 TOPIC -->
+  <section class="stage topic locked" id="stage2">
+    <div class="stage-head">
+      <div class="stage-num">2</div>
+      <h2 class="stage-title">Round 1 — Pick the Topic</h2>
+    </div>
+    <p class="stage-desc">Add your debate topics once — the wheel removes each one after it's drawn, so the final round never repeats a topic.</p>
+
+    <details>
+      <summary style="cursor:pointer; font-weight:600; color:var(--ink-soft);">Edit topic list</summary>
+      <textarea id="topicsInput" style="margin-top:0.7rem;" placeholder="One topic per line"></textarea>
+      <div style="text-align:right; margin-top:0.5rem;">
+        <button class="btn ghost" id="applyTopicsBtn" style="padding:0.45rem 1rem; font-size:0.85rem;">Update Topic Pool</button>
+      </div>
+    </details>
+
+    <div class="wheel-row">
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <canvas class="wheel-canvas" id="round1Wheel" width="600" height="600"></canvas>
+        <div class="hub"></div>
+      </div>
+      <button class="btn red" id="spinRound1TopicBtn">Spin for Round 1 Topic</button>
+      <div class="topic-result" id="round1TopicResult"></div>
+    </div>
+  </section>
+
+  <!-- STAGE 3: ROUND 1 TOSS -->
+  <section class="stage toss locked" id="stage3">
+    <div class="stage-head">
+      <div class="stage-num">3</div>
+      <h2 class="stage-title">Round 1 — Toss</h2>
+    </div>
+    <p class="stage-desc">Flip to see which team calls it. The winning team picks For or Against.</p>
+
+    <div class="coin-area">
+      <div class="coin" id="round1Coin">
+        <div class="coin-inner" id="round1CoinInner">
+          <div class="coin-face front">TEAM A</div>
+          <div class="coin-face back">TEAM B</div>
+        </div>
+      </div>
+      <button class="btn gold" id="flipRound1Btn">Flip the Coin</button>
+      <div class="toss-result" id="round1TossResult"></div>
+      <div class="side-choice-row" id="round1SideChoice" style="display:none;">
+        <button class="btn blue" data-side="FOR" id="round1ForBtn">Choose FOR</button>
+        <button class="btn red" data-side="AGAINST" id="round1AgainstBtn">Choose AGAINST</button>
+      </div>
+      <div class="side-summary" id="round1SideSummary"></div>
+    </div>
+  </section>
+
+  <!-- STAGE 4: ROUND 1 JURY -->
+  <section class="stage score locked" id="stage4">
+    <div class="stage-head">
+      <div class="stage-num">4</div>
+      <h2 class="stage-title">Round 1 — Jury Scoring</h2>
+    </div>
+    <p class="stage-desc">Each criterion is weighted 25%. Score every team from 0–10 on each.</p>
+
+    <div class="score-grid">
+      <div class="score-col a" id="round1ScoreA"><h4>Team A</h4></div>
+      <div class="score-col b" id="round1ScoreB"><h4>Team B</h4></div>
+    </div>
+
+    <div class="verdict-box">
+      <div style="text-align:center; margin-top:0.6rem;">
+        <button class="btn blue" id="declareRound1Btn">Declare Round 1 Winner</button>
+      </div>
+      <div class="verdict-line" id="round1Verdict"></div>
+      <div class="tiebreak-row" id="round1Tiebreak" style="display:none;">
+        <button class="btn blue" data-team="A">Judges pick Team A</button>
+        <button class="btn red" data-team="B">Judges pick Team B</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 5: FINALISTS -->
+  <section class="stage team locked" id="stage5">
+    <div class="stage-head">
+      <div class="stage-num">5</div>
+      <h2 class="stage-title">Select the Finalists</h2>
+    </div>
+    <p class="stage-desc">One speaker from each team advances to the individual final. The jury / MC picks who represents each side.</p>
+
+    <div class="finalist-grid">
+      <div class="finalist-col">
+        <label>Finalist from Team A</label>
+        <select id="finalistASelect"></select>
+      </div>
+      <div class="finalist-col">
+        <label>Finalist from Team B</label>
+        <select id="finalistBSelect"></select>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:1.2rem;">
+      <button class="btn blue" id="confirmFinalistsBtn">Confirm Finalists</button>
+    </div>
+    <div class="verdict-line" id="finalistsResult" style="margin-top:1rem;"></div>
+  </section>
+
+  <!-- STAGE 6: FINAL TOPIC -->
+  <section class="stage topic locked" id="stage6">
+    <div class="stage-head">
+      <div class="stage-num">6</div>
+      <h2 class="stage-title">Grand Final — Pick the Topic</h2>
+    </div>
+    <p class="stage-desc">Drawn from the same pool, so it can't repeat Round 1's topic.</p>
+    <div class="remaining-note" id="remainingTopicsNote"></div>
+
+    <div class="wheel-row">
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <canvas class="wheel-canvas" id="finalWheel" width="600" height="600"></canvas>
+        <div class="hub"></div>
+      </div>
+      <button class="btn red" id="spinFinalTopicBtn">Spin for Final Topic</button>
+      <div class="topic-result" id="finalTopicResult"></div>
+    </div>
+  </section>
+
+  <!-- STAGE 7: FINAL TOSS -->
+  <section class="stage toss locked" id="stage7">
+    <div class="stage-head">
+      <div class="stage-num">7</div>
+      <h2 class="stage-title">Grand Final — Toss</h2>
+    </div>
+    <p class="stage-desc">The winning finalist picks For or Against.</p>
+
+    <div class="coin-area">
+      <div class="coin" id="finalCoin">
+        <div class="coin-inner" id="finalCoinInner">
+          <div class="coin-face front" id="finalCoinFrontLabel">A</div>
+          <div class="coin-face back" id="finalCoinBackLabel">B</div>
+        </div>
+      </div>
+      <button class="btn gold" id="flipFinalBtn">Flip the Coin</button>
+      <div class="toss-result" id="finalTossResult"></div>
+      <div class="side-choice-row" id="finalSideChoice" style="display:none;">
+        <button class="btn blue" data-side="FOR" id="finalForBtn">Choose FOR</button>
+        <button class="btn red" data-side="AGAINST" id="finalAgainstBtn">Choose AGAINST</button>
+      </div>
+      <div class="side-summary" id="finalSideSummary"></div>
+    </div>
+  </section>
+
+  <!-- STAGE 8: FINAL JURY & CHAMPION -->
+  <section class="stage score locked" id="stage8">
+    <div class="stage-head">
+      <div class="stage-num">8</div>
+      <h2 class="stage-title">Grand Final — Jury Verdict</h2>
+    </div>
+    <p class="stage-desc">Same weighting, one on one. Highest score is crowned Champion.</p>
+
+    <div class="score-grid">
+      <div class="score-col a" id="finalScoreA"><h4>Finalist A</h4></div>
+      <div class="score-col b" id="finalScoreB"><h4>Finalist B</h4></div>
+    </div>
+
+    <div class="verdict-box">
+      <div style="text-align:center; margin-top:0.6rem;">
+        <button class="btn blue" id="declareChampionBtn">Crown the Champion</button>
+      </div>
+      <div class="verdict-line" id="finalVerdict"></div>
+      <div class="tiebreak-row" id="finalTiebreak" style="display:none;">
+        <button class="btn blue" data-final="A">Judges pick Finalist A</button>
+        <button class="btn red" data-final="B">Judges pick Finalist B</button>
+      </div>
+      <div class="champion-line" id="championLine"></div>
+    </div>
+  </section>
+
+  <div class="reset-all-row">
+    <button class="btn ghost" id="resetAllBtn">Reset Entire Event</button>
+  </div>
+
+</main>
+
+<footer>ANON Global Foundation — Wellness Week Debate Championship</footer>
+
+<canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card" id="modalCard">
+    <div class="modal-eyebrow" id="modalEyebrow">RESULT</div>
+    <div class="modal-headline" id="modalHeadline">Winner</div>
+    <div class="modal-value" id="modalValue">—</div>
+    <button class="modal-continue" id="modalContinueBtn">Continue</button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ---------------------------------------------------------
+     UTILITIES
+  --------------------------------------------------------- */
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random()*(i+1));
+      var tmp=a[i]; a[i]=a[j]; a[j]=tmp;
+    }
+    return a;
+  }
+  function parseLines(text){
+    return text.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+  }
+  function escapeHtml(s){
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+  function unlockStage(id){
+    document.getElementById(id).classList.remove('locked');
+  }
+  function markDone(id){
+    document.getElementById(id).classList.add('done');
+  }
+
+  /* ---------------------------------------------------------
+     CONFETTI + MODAL (reused across all reveals)
+  --------------------------------------------------------- */
+  var confettiCanvas = document.getElementById('confettiCanvas');
+  var confettiCtx = confettiCanvas.getContext('2d');
+  var confettiColors = ['#EE3134','#365BA9','#FFC93C','#7096D6','#FF6F72'];
+  var confettiAnimId = null;
+
+  function resizeConfettiCanvas(){
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeConfettiCanvas);
+  resizeConfettiCanvas();
+
+  function launchConfetti(){
+    var particles = [];
+    var count = 140;
+    for(var i=0;i<count;i++){
+      particles.push({
+        x: Math.random()*confettiCanvas.width,
+        y: -20 - Math.random()*confettiCanvas.height*0.4,
+        w: 6+Math.random()*6, h: 8+Math.random()*8,
+        color: confettiColors[Math.floor(Math.random()*confettiColors.length)],
+        speedY: 2.5+Math.random()*3.5, speedX:(Math.random()-0.5)*2.5,
+        rotation:Math.random()*Math.PI*2, rotationSpeed:(Math.random()-0.5)*0.3
+      });
+    }
+    var start = Date.now(), duration = 3200;
+    function frame(){
+      confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+      var elapsed = Date.now()-start, stillFalling=false;
+      for(var i=0;i<particles.length;i++){
+        var p = particles[i];
+        p.y += p.speedY; p.x += p.speedX; p.rotation += p.rotationSpeed;
+        if(p.y < confettiCanvas.height+20) stillFalling = true;
+        confettiCtx.save();
+        confettiCtx.translate(p.x,p.y); confettiCtx.rotate(p.rotation);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+        confettiCtx.restore();
+      }
+      if(elapsed<duration && stillFalling){ confettiAnimId = requestAnimationFrame(frame); }
+      else { confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height); }
+    }
+    if(confettiAnimId) cancelAnimationFrame(confettiAnimId);
+    frame();
+  }
+
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalEyebrow = document.getElementById('modalEyebrow');
+  var modalHeadline = document.getElementById('modalHeadline');
+  var modalValue = document.getElementById('modalValue');
+  document.getElementById('modalContinueBtn').addEventListener('click', function(){
+    modalOverlay.classList.remove('show');
+  });
+  modalOverlay.addEventListener('click', function(e){
+    if(e.target === modalOverlay) modalOverlay.classList.remove('show');
+  });
+  function showRevealModal(eyebrow, headline, value){
+    modalEyebrow.textContent = eyebrow;
+    modalHeadline.textContent = headline;
+    modalValue.textContent = value;
+    modalOverlay.classList.add('show');
+    launchConfetti();
+  }
+
+  /* ---------------------------------------------------------
+     WHEEL FACTORY (shared for round-1 & final topic wheels)
+  --------------------------------------------------------- */
+  function wrapLabel(ctx, label, fontWeight, maxFontSize, minFontSize, maxWidth, maxLines){
+    var words = label.split(/\s+/).filter(Boolean);
+    for(var fontSize=maxFontSize; fontSize>=minFontSize; fontSize-=1){
+      ctx.font = fontWeight+' '+fontSize+'px Segoe UI, Arial, sans-serif';
+      var lines=[], current='';
+      for(var i=0;i<words.length;i++){
+        var test = current ? current+' '+words[i] : words[i];
+        if(ctx.measureText(test).width <= maxWidth){ current = test; }
+        else { if(current) lines.push(current); current = words[i]; }
+      }
+      if(current) lines.push(current);
+      if(lines.length <= maxLines){
+        var allFit = lines.every(function(l){ return ctx.measureText(l).width <= maxWidth; });
+        if(allFit || fontSize===minFontSize) return {fontSize:fontSize, lines:lines};
+      }
+    }
+    ctx.font = fontWeight+' '+minFontSize+'px Segoe UI, Arial, sans-serif';
+    return {fontSize:minFontSize, lines:[label]};
+  }
+
+  function createWheel(canvasId, palette){
+    var canvas = document.getElementById(canvasId);
+    var ctx = canvas.getContext('2d');
+    var state = { items:[], rotation:0, spinning:false };
+
+    function draw(){
+      var w=canvas.width,h=canvas.height,cx=w/2,cy=h/2,r=w/2-6;
+      ctx.clearRect(0,0,w,h);
+      if(state.items.length===0){
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+        ctx.fillStyle='#E3E9F5'; ctx.fill();
+        ctx.fillStyle='#5B6473'; ctx.font='700 22px Segoe UI, Arial, sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('Add topics above', cx, cy);
+        return;
+      }
+      var n=state.items.length, arc=(Math.PI*2)/n;
+      var innerStop=74, outerStop=20;
+      var maxTextWidth = r-innerStop-outerStop;
+      var maxFontSize = n>14?20:n>9?24:30;
+      var minFontSize=13, maxLines=3, lineHeightFactor=1.12;
+
+      for(var i=0;i<n;i++){
+        var start=i*arc-Math.PI/2, end=start+arc;
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end); ctx.closePath();
+        ctx.fillStyle = palette[i%palette.length]; ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,0.45)'; ctx.lineWidth=3; ctx.stroke();
+
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(start+arc/2);
+        ctx.textAlign='right'; ctx.textBaseline='middle'; ctx.fillStyle='#FFFFFF';
+        var wrapped = wrapLabel(ctx, state.items[i], '700', maxFontSize, minFontSize, maxTextWidth, maxLines);
+        ctx.font='700 '+wrapped.fontSize+'px Segoe UI, Arial, sans-serif';
+        var lineHeight = wrapped.fontSize*lineHeightFactor;
+        var totalHeight = lineHeight*wrapped.lines.length;
+        var startY = -totalHeight/2 + lineHeight/2;
+        for(var li=0; li<wrapped.lines.length; li++){
+          ctx.fillText(wrapped.lines[li], r-outerStop, startY+li*lineHeight);
+        }
+        ctx.restore();
+      }
+    }
+
+    function setItems(list){ state.items = list.slice(); draw(); }
+
+    function redrawAtCurrentRotation(){
+      var normalized = state.rotation % 360;
+      canvas.style.transition='none';
+      canvas.style.transform='rotate('+normalized+'deg)';
+      void canvas.offsetWidth;
+      draw();
+    }
+
+    function spin(onDone){
+      if(state.spinning || state.items.length===0) return;
+      state.spinning = true;
+      var n=state.items.length, arc=360/n;
+      var winnerIndex = Math.floor(Math.random()*n);
+      var targetCenter = winnerIndex*arc+arc/2;
+      var extraSpins = 5+Math.floor(Math.random()*3);
+      var currentRotation = state.rotation % 360;
+      var desiredFinal = 360*extraSpins + (360-targetCenter);
+      state.rotation = state.rotation - currentRotation + desiredFinal;
+      canvas.style.transition='transform 4.2s cubic-bezier(0.12,0.67,0.13,1)';
+      canvas.style.transform='rotate('+state.rotation+'deg)';
+      setTimeout(function(){
+        state.spinning=false;
+        var winner = state.items[winnerIndex];
+        state.items.splice(winnerIndex,1);
+        redrawAtCurrentRotation();
+        onDone(winner);
+      }, 4300);
+    }
+
+    draw();
+    return { setItems:setItems, spin:spin, get items(){ return state.items; } };
+  }
+
+  /* ---------------------------------------------------------
+     COIN TOSS FACTORY
+  --------------------------------------------------------- */
+  function createCoin(innerId){
+    var inner = document.getElementById(innerId);
+    var rotation = 0;
+    function flip(onDone){
+      var landOnFront = Math.random() < 0.5;
+      var extraTurns = 4 + Math.floor(Math.random()*3);
+      var target = extraTurns*360 + (landOnFront ? 0 : 180);
+      rotation += target;
+      inner.style.transform = 'rotateY('+rotation+'deg)';
+      setTimeout(function(){ onDone(landOnFront ? 'A' : 'B'); }, 2500);
+    }
+    return { flip:flip };
+  }
+
+  /* ---------------------------------------------------------
+     SCORE PANEL FACTORY
+  --------------------------------------------------------- */
+  var CRITERIA = [
+    {key:'argument', label:'Argument Strength'},
+    {key:'rebuttal', label:'Rebuttal Quality'},
+    {key:'structure', label:'Structure & Clarity'},
+    {key:'persuasion', label:'Persuasiveness'}
+  ];
+
+  function renderScorePanel(containerId, prefix){
+    var container = document.getElementById(containerId);
+    CRITERIA.forEach(function(c){
+      var row = document.createElement('div');
+      row.className = 'criteria-row';
+      var inputId = prefix+'_'+c.key;
+      row.innerHTML =
+        '<div class="criteria-label"><span>'+c.label+' <span class="wt">(25%)</span></span><span id="'+inputId+'_val">5</span>/10</div>'+
+        '<input type="range" min="0" max="10" step="1" value="5" id="'+inputId+'">';
+      container.appendChild(row);
+    });
+    var totalDiv = document.createElement('div');
+    totalDiv.className = 'score-total';
+    totalDiv.id = prefix+'_total';
+    totalDiv.textContent = 'Total: 5.0 / 10';
+    container.appendChild(totalDiv);
+
+    CRITERIA.forEach(function(c){
+      var inputId = prefix+'_'+c.key;
+      document.getElementById(inputId).addEventListener('input', function(){
+        document.getElementById(inputId+'_val').textContent = this.value;
+        updateTotal();
+      });
+    });
+    function updateTotal(){
+      var sum = 0;
+      CRITERIA.forEach(function(c){
+        sum += parseInt(document.getElementById(prefix+'_'+c.key).value, 10);
+      });
+      var avg = sum / CRITERIA.length;
+      document.getElementById(prefix+'_total').textContent = 'Total: '+avg.toFixed(1)+' / 10';
+    }
+    function getTotal(){
+      var sum = 0;
+      CRITERIA.forEach(function(c){
+        sum += parseInt(document.getElementById(prefix+'_'+c.key).value, 10);
+      });
+      return sum / CRITERIA.length;
+    }
+    return { getTotal:getTotal };
+  }
+
+  /* ---------------------------------------------------------
+     STAGE 1 — TEAM BUILDER
+  --------------------------------------------------------- */
+  var participantsInput = document.getElementById('participantsInput');
+  var teamSizeRow = document.getElementById('teamSizeRow');
+  var teamError = document.getElementById('teamError');
+  var teamsGrid = document.getElementById('teamsGrid');
+  var teamAList = document.getElementById('teamAList');
+  var teamBList = document.getElementById('teamBList');
+  var benchNote = document.getElementById('benchNote');
+
+  var chosenTeamSize = 3;
+  var teamA = [], teamB = [];
+
+  teamSizeRow.addEventListener('click', function(e){
+    var btn = e.target.closest('.pill-btn');
+    if(!btn) return;
+    Array.prototype.forEach.call(teamSizeRow.querySelectorAll('.pill-btn'), function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    chosenTeamSize = parseInt(btn.getAttribute('data-size'), 10);
+  });
+
+  document.getElementById('shuffleBtn').addEventListener('click', function(){
+    teamError.innerHTML = '';
+    var participants = parseLines(participantsInput.value);
+    var needed = chosenTeamSize * 2;
+    if(participants.length < needed){
+      teamError.innerHTML = '<div class="error-box">You need at least '+needed+' participants for '+chosenTeamSize+' vs '+chosenTeamSize+'. You currently have '+participants.length+'.</div>';
+      return;
+    }
+    var shuffled = shuffle(participants);
+    var playing = shuffled.slice(0, needed);
+    var benched = shuffled.slice(needed);
+    teamA = playing.slice(0, chosenTeamSize);
+    teamB = playing.slice(chosenTeamSize);
+
+    teamAList.innerHTML = teamA.map(function(n){ return '<li>'+escapeHtml(n)+'</li>'; }).join('');
+    teamBList.innerHTML = teamB.map(function(n){ return '<li>'+escapeHtml(n)+'</li>'; }).join('');
+    teamsGrid.style.display = 'grid';
+
+    if(benched.length){
+      benchNote.innerHTML = '⚠️ Sitting out this round (extra names beyond '+needed+'): '+benched.map(escapeHtml).join(', ');
+    } else {
+      benchNote.innerHTML = '';
+    }
+
+    markDone('stage1');
+    unlockStage('stage2');
+    populateFinalistSelects();
+  });
+
+  /* ---------------------------------------------------------
+     STAGE 2 — ROUND 1 TOPIC WHEEL
+  --------------------------------------------------------- */
+  var TOPIC_PALETTE = ['#EE3134','#365BA9','#C81E22','#24407D','#FF6F72','#7096D6'];
+  var defaultTopics = [
+    "Is social media doing more harm than good?",
+    "Should exams be replaced by continuous assessment?",
+    "Is work-life balance a myth in today's world?",
+    "Should AI be regulated by governments?",
+    "Is competition healthier than collaboration?",
+    "Should mental health days be mandatory at work?",
+    "Is remote work better than office work?",
+    "Should junk food advertising be banned?",
+    "Is social media making us more or less social?",
+    "Should college be free for everyone?"
+  ];
+  var topicsInput = document.getElementById('topicsInput');
+  topicsInput.value = defaultTopics.join('\n');
+
+  var round1Wheel = createWheel('round1Wheel', TOPIC_PALETTE);
+  round1Wheel.setItems(defaultTopics);
+
+  document.getElementById('applyTopicsBtn').addEventListener('click', function(){
+    round1Wheel.setItems(parseLines(topicsInput.value));
+  });
+
+  document.getElementById('spinRound1TopicBtn').addEventListener('click', function(){
+    var btn = this;
+    btn.disabled = true;
+    round1Wheel.spin(function(winner){
+      document.getElementById('round1TopicResult').textContent = 'Round 1 Topic: '+winner;
+      markDone('stage2');
+      unlockStage('stage3');
+      showRevealModal('ROUND 1 TOPIC', 'Today\'s teams will debate:', winner);
+    });
+  });
+
+  /* ---------------------------------------------------------
+     STAGE 3 — ROUND 1 TOSS
+  --------------------------------------------------------- */
+  var round1Coin = createCoin('round1CoinInner');
+  var round1TossWinnerTeam = null;
+
+  document.getElementById('flipRound1Btn').addEventListener('click', function(){
+    var btn = this;
+    btn.disabled = true;
+    round1Coin.flip(function(winner){
+      round1TossWinnerTeam = winner;
+      var label = winner==='A' ? 'Team A' : 'Team B';
+      document.getElementById('round1TossResult').textContent = label+' wins the toss!';
+      document.getElementById('round1SideChoice').style.display = 'flex';
+      btn.disabled = false;
+      launchConfetti();
+    });
+  });
+
+  document.getElementById('round1SideChoice').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-side]');
+    if(!btn) return;
+    var chosen = btn.getAttribute('data-side');
+    var other = chosen==='FOR' ? 'AGAINST' : 'FOR';
+    var winnerLabel = round1TossWinnerTeam==='A' ? 'Team A' : 'Team B';
+    var otherLabel = round1TossWinnerTeam==='A' ? 'Team B' : 'Team A';
+    document.getElementById('round1SideSummary').innerHTML =
+      '<span class="side-tag '+(round1TossWinnerTeam==='A'?'a':'b')+'">'+winnerLabel+': '+chosen+'</span>'+
+      '<span class="side-tag '+(round1TossWinnerTeam==='A'?'b':'a')+'">'+otherLabel+': '+other+'</span>';
+    document.getElementById('round1SideChoice').style.display = 'none';
+    markDone('stage3');
+    unlockStage('stage4');
+  });
+
+  /* ---------------------------------------------------------
+     STAGE 4 — ROUND 1 JURY
+  --------------------------------------------------------- */
+  var round1PanelA = renderScorePanel('round1ScoreA', 'r1a');
+  var round1PanelB = renderScorePanel('round1ScoreB', 'r1b');
+  var round1Winner = null;
+
+  document.getElementById('declareRound1Btn').addEventListener('click', function(){
+    var totalA = round1PanelA.getTotal();
+    var totalB = round1PanelB.getTotal();
+    var verdict = document.getElementById('round1Verdict');
+    var tiebreak = document.getElementById('round1Tiebreak');
+    if(totalA === totalB){
+      verdict.textContent = 'It\'s a tie ('+totalA.toFixed(1)+' – '+totalB.toFixed(1)+'). The judges must break it.';
+      tiebreak.style.display = 'flex';
+    } else {
+      round1Winner = totalA > totalB ? 'A' : 'B';
+      finishRound1(round1Winner, totalA, totalB);
+    }
+  });
+
+  document.getElementById('round1Tiebreak').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-team]');
+    if(!btn) return;
+    round1Winner = btn.getAttribute('data-team');
+    document.getElementById('round1Tiebreak').style.display = 'none';
+    finishRound1(round1Winner, round1PanelA.getTotal(), round1PanelB.getTotal());
+  });
+
+  function finishRound1(winner, totalA, totalB){
+    var label = winner==='A' ? 'Team A' : 'Team B';
+    document.getElementById('round1Verdict').textContent =
+      'Team A: '+totalA.toFixed(1)+'/10 — Team B: '+totalB.toFixed(1)+'/10';
+    markDone('stage4');
+    unlockStage('stage5');
+    showRevealModal('ROUND 1 RESULT', 'Winning team:', label);
+  }
+
+  /* ---------------------------------------------------------
+     STAGE 5 — FINALIST SELECTION
+  --------------------------------------------------------- */
+  var finalistASelect = document.getElementById('finalistASelect');
+  var finalistBSelect = document.getElementById('finalistBSelect');
+  var finalistA = null, finalistB = null;
+
+  function populateFinalistSelects(){
+    finalistASelect.innerHTML = teamA.map(function(n){ return '<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>'; }).join('');
+    finalistBSelect.innerHTML = teamB.map(function(n){ return '<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>'; }).join('');
+  }
+
+  document.getElementById('confirmFinalistsBtn').addEventListener('click', function(){
+    finalistA = finalistASelect.value;
+    finalistB = finalistBSelect.value;
+    if(!finalistA || !finalistB) return;
+    document.getElementById('finalistsResult').textContent = 'Grand Final: '+finalistA+'  vs  '+finalistB;
+    document.getElementById('finalCoinFrontLabel').textContent = finalistA;
+    document.getElementById('finalCoinBackLabel').textContent = finalistB;
+    markDone('stage5');
+    unlockStage('stage6');
+    document.getElementById('finalScoreA').querySelector('h4').textContent = finalistA;
+    document.getElementById('finalScoreB').querySelector('h4').textContent = finalistB;
+  });
+
+  /* ---------------------------------------------------------
+     STAGE 6 — FINAL TOPIC WHEEL (shares topic pool with round 1)
+  --------------------------------------------------------- */
+  var finalWheel = createWheel('finalWheel', TOPIC_PALETTE);
+
+  function refreshFinalWheelFromPool(){
+    finalWheel.setItems(round1Wheel.items);
+    document.getElementById('remainingTopicsNote').textContent =
+      round1Wheel.items.length + ' topic(s) remaining in the shared pool.';
+  }
+
+  // populate final wheel whenever stage 5 unlocks stage 6
+  var stage6Observer = new MutationObserver(function(){
+    if(!document.getElementById('stage6').classList.contains('locked')){
+      refreshFinalWheelFromPool();
+    }
+  });
+  stage6Observer.observe(document.getElementById('stage6'), { attributes:true, attributeFilter:['class'] });
+
+  document.getElementById('spinFinalTopicBtn').addEventListener('click', function(){
+    var btn = this;
+    btn.disabled = true;
+    finalWheel.spin(function(winner){
+      document.getElementById('finalTopicResult').textContent = 'Final Topic: '+winner;
+      markDone('stage6');
+      unlockStage('stage7');
+      showRevealModal('GRAND FINAL TOPIC', 'The finalists will debate:', winner);
+    });
+  });
+
+  /* ---------------------------------------------------------
+     STAGE 7 — FINAL TOSS
+  --------------------------------------------------------- */
+  var finalCoin = createCoin('finalCoinInner');
+  var finalTossWinner = null;
+
+  document.getElementById('flipFinalBtn').addEventListener('click', function(){
+    var btn = this;
+    btn.disabled = true;
+    finalCoin.flip(function(winner){
+      finalTossWinner = winner;
+      var label = winner==='A' ? finalistA : finalistB;
+      document.getElementById('finalTossResult').textContent = label+' wins the toss!';
+      document.getElementById('finalSideChoice').style.display = 'flex';
+      btn.disabled = false;
+      launchConfetti();
+    });
+  });
+
+  document.getElementById('finalSideChoice').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-side]');
+    if(!btn) return;
+    var chosen = btn.getAttribute('data-side');
+    var other = chosen==='FOR' ? 'AGAINST' : 'FOR';
+    var winnerLabel = finalTossWinner==='A' ? finalistA : finalistB;
+    var otherLabel = finalTossWinner==='A' ? finalistB : finalistA;
+    document.getElementById('finalSideSummary').innerHTML =
+      '<span class="side-tag '+(finalTossWinner==='A'?'a':'b')+'">'+winnerLabel+': '+chosen+'</span>'+
+      '<span class="side-tag '+(finalTossWinner==='A'?'b':'a')+'">'+otherLabel+': '+other+'</span>';
+    document.getElementById('finalSideChoice').style.display = 'none';
+    markDone('stage7');
+    unlockStage('stage8');
+  });
+
+  /* ---------------------------------------------------------
+     STAGE 8 — FINAL JURY & CHAMPION
+  --------------------------------------------------------- */
+  var finalPanelA = renderScorePanel('finalScoreA', 'f_a');
+  var finalPanelB = renderScorePanel('finalScoreB', 'f_b');
+
+  document.getElementById('declareChampionBtn').addEventListener('click', function(){
+    var totalA = finalPanelA.getTotal();
+    var totalB = finalPanelB.getTotal();
+    var verdict = document.getElementById('finalVerdict');
+    var tiebreak = document.getElementById('finalTiebreak');
+    verdict.textContent = (finalistA||'Finalist A')+': '+totalA.toFixed(1)+'/10 — '+(finalistB||'Finalist B')+': '+totalB.toFixed(1)+'/10';
+    if(totalA === totalB){
+      verdict.textContent += '  (tie — judges must break it)';
+      tiebreak.style.display = 'flex';
+    } else {
+      var champion = totalA > totalB ? finalistA : finalistB;
+      crownChampion(champion);
+    }
+  });
+
+  document.getElementById('finalTiebreak').addEventListener('click', function(e){
+    var btn = e.target.closest('button[data-final]');
+    if(!btn) return;
+    var pick = btn.getAttribute('data-final');
+    var champion = pick==='A' ? finalistA : finalistB;
+    document.getElementById('finalTiebreak').style.display = 'none';
+    crownChampion(champion);
+  });
+
+  function crownChampion(champion){
+    document.getElementById('championLine').textContent = '🏆 Champion: '+champion;
+    markDone('stage8');
+    showRevealModal('🏆 GRAND FINAL CHAMPION', 'Congratulations to', champion);
+  }
+
+  /* ---------------------------------------------------------
+     RESET
+  --------------------------------------------------------- */
+  document.getElementById('resetAllBtn').addEventListener('click', function(){
+    if(!confirm('Reset the entire event? This clears teams, topics drawn, toss results and scores.')) return;
+    location.reload();
+  });
+
+})();
+</script>
+
+</body>
+</html>
