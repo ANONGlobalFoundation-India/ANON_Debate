@@ -328,26 +328,27 @@
       <div class="stage-num">5</div>
       <h2 class="stage-title">Select the Finalists</h2>
     </div>
-    <p class="stage-desc">One speaker from each team advances to the individual final. The jury / MC picks who represents each side.</p>
+    <p class="stage-desc">Pick any 4 participants from the full roster — the split doesn't have to be 2-and-2. The first pair forms Final Team 1, the second pair forms Final Team 2.</p>
 
     <div class="finalist-grid">
       <div class="finalist-col">
-        <label>Finalist from Team A</label>
-        <select id="finalistASelect"></select>
+        <label>Finalist 1 (Final Team 1)</label>
+        <select id="finalistSelect1"></select>
       </div>
       <div class="finalist-col">
-        <label>Finalist from Team B</label>
-        <select id="finalistBSelect"></select>
-      </div>
-       <div class="finalist-col">
-        <label>Finalist from Team A</label>
-        <select id="finalistASelect"></select>
+        <label>Finalist 2 (Final Team 1)</label>
+        <select id="finalistSelect2"></select>
       </div>
       <div class="finalist-col">
-        <label>Finalist from Team B</label>
-        <select id="finalistBSelect"></select>
+        <label>Finalist 3 (Final Team 2)</label>
+        <select id="finalistSelect3"></select>
+      </div>
+      <div class="finalist-col">
+        <label>Finalist 4 (Final Team 2)</label>
+        <select id="finalistSelect4"></select>
       </div>
     </div>
+    <div id="finalistError"></div>
     <div style="text-align:center; margin-top:1.2rem;">
       <button class="btn blue" id="confirmFinalistsBtn">Confirm Finalists</button>
     </div>
@@ -380,13 +381,13 @@
       <div class="stage-num">7</div>
       <h2 class="stage-title">Grand Final — Toss</h2>
     </div>
-    <p class="stage-desc">The winning finalist picks For or Against.</p>
+    <p class="stage-desc">The winning final team picks For or Against.</p>
 
     <div class="coin-area">
       <div class="coin" id="finalCoin">
         <div class="coin-inner" id="finalCoinInner">
-          <div class="coin-face front" id="finalCoinFrontLabel">A</div>
-          <div class="coin-face back" id="finalCoinBackLabel">B</div>
+          <div class="coin-face front" id="finalCoinFrontLabel">Final Team 1</div>
+          <div class="coin-face back" id="finalCoinBackLabel">Final Team 2</div>
         </div>
       </div>
       <button class="btn gold" id="flipFinalBtn">Flip the Coin</button>
@@ -399,27 +400,43 @@
     </div>
   </section>
 
-  <!-- STAGE 8: FINAL JURY & CHAMPION -->
+  <!-- STAGE 8: FINAL JURY & RESULT -->
   <section class="stage score locked" id="stage8">
     <div class="stage-head">
       <div class="stage-num">8</div>
       <h2 class="stage-title">Grand Final — Jury Verdict</h2>
     </div>
-    <p class="stage-desc">Same weighting, one on one. Highest score is crowned Champion.</p>
+    <p class="stage-desc">Score each of the 4 finalists individually, then pick the 1st and 2nd place speakers.</p>
 
+    <h3 style="text-align:center; color:var(--blue-dark); font-size:1.1rem; margin-bottom:0.3rem;">Final Team 1</h3>
     <div class="score-grid">
-      <div class="score-col a" id="finalScoreA"><h4>Finalist A</h4></div>
-      <div class="score-col b" id="finalScoreB"><h4>Finalist B</h4></div>
+      <div class="score-col a" id="finalScore1"><h4>Finalist 1</h4></div>
+      <div class="score-col a" id="finalScore2"><h4>Finalist 2</h4></div>
+    </div>
+
+    <h3 style="text-align:center; color:var(--red-dark); font-size:1.1rem; margin:1.4rem 0 0.3rem;">Final Team 2</h3>
+    <div class="score-grid">
+      <div class="score-col b" id="finalScore3"><h4>Finalist 3</h4></div>
+      <div class="score-col b" id="finalScore4"><h4>Finalist 4</h4></div>
     </div>
 
     <div class="verdict-box">
-      <div style="text-align:center; margin-top:0.6rem;">
-        <button class="btn blue" id="declareChampionBtn">Crown the Champion</button>
+      <div class="verdict-line" id="finalScoreSummary" style="margin-top:1rem;"></div>
+
+      <div class="finalist-grid" style="margin-top:1rem;">
+        <div class="finalist-col">
+          <label>🥇 1st Place Speaker</label>
+          <select id="firstPlaceSelect"></select>
+        </div>
+        <div class="finalist-col">
+          <label>🥈 2nd Place Speaker</label>
+          <select id="secondPlaceSelect"></select>
+        </div>
       </div>
-      <div class="verdict-line" id="finalVerdict"></div>
-      <div class="tiebreak-row" id="finalTiebreak" style="display:none;">
-        <button class="btn blue" data-final="A">Judges pick Finalist A</button>
-        <button class="btn red" data-final="B">Judges pick Finalist B</button>
+      <div id="placeError"></div>
+
+      <div style="text-align:center; margin-top:1.2rem;">
+        <button class="btn blue" id="declareResultBtn">Confirm Result</button>
       </div>
       <div class="champion-line" id="championLine"></div>
     </div>
@@ -869,28 +886,55 @@
   }
 
   /* ---------------------------------------------------------
-     STAGE 5 — FINALIST SELECTION
+     STAGE 5 — FINALIST SELECTION (pooled from the full roster)
   --------------------------------------------------------- */
-  var finalistASelect = document.getElementById('finalistASelect');
-  var finalistBSelect = document.getElementById('finalistBSelect');
-  var finalistA = null, finalistB = null;
+  var finalistSelects = [1,2,3,4].map(function(i){ return document.getElementById('finalistSelect'+i); });
+  var finalistError = document.getElementById('finalistError');
+  var finalists = [null,null,null,null]; // index 0..3 = Finalist 1..4
+  var finalTeam1 = [], finalTeam2 = []; // arrays of 2 names each
 
   function populateFinalistSelects(){
-    finalistASelect.innerHTML = teamA.map(function(n){ return '<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>'; }).join('');
-    finalistBSelect.innerHTML = teamB.map(function(n){ return '<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>'; }).join('');
+    var all = teamA.concat(teamB);
+    var options = all.map(function(n){
+      var tag = teamA.indexOf(n)!==-1 ? 'Team A' : 'Team B';
+      return '<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+' ('+tag+')</option>';
+    }).join('');
+    finalistSelects.forEach(function(sel, idx){
+      sel.innerHTML = options;
+      if(all.length > idx) sel.selectedIndex = idx; // default to 4 distinct people where possible
+    });
   }
 
   document.getElementById('confirmFinalistsBtn').addEventListener('click', function(){
-    finalistA = finalistASelect.value;
-    finalistB = finalistBSelect.value;
-    if(!finalistA || !finalistB) return;
-    document.getElementById('finalistsResult').textContent = 'Grand Final: '+finalistA+'  vs  '+finalistB;
-    document.getElementById('finalCoinFrontLabel').textContent = finalistA;
-    document.getElementById('finalCoinBackLabel').textContent = finalistB;
+    finalistError.innerHTML = '';
+    var picks = finalistSelects.map(function(sel){ return sel.value; });
+    if(picks.some(function(p){ return !p; })) return;
+    var unique = picks.filter(function(v, i){ return picks.indexOf(v) === i; });
+    if(unique.length < 4){
+      finalistError.innerHTML = '<div class="error-box">All 4 finalists must be different people.</div>';
+      return;
+    }
+    finalists = picks;
+    finalTeam1 = [picks[0], picks[1]];
+    finalTeam2 = [picks[2], picks[3]];
+
+    document.getElementById('finalistsResult').textContent =
+      'Final Team 1: '+finalTeam1.join(' & ')+'   vs   Final Team 2: '+finalTeam2.join(' & ');
+
+    document.getElementById('finalCoinFrontLabel').textContent = 'Team 1: '+finalTeam1.join(' & ');
+    document.getElementById('finalCoinBackLabel').textContent = 'Team 2: '+finalTeam2.join(' & ');
+    for(var i=1;i<=4;i++){
+      document.getElementById('finalScore'+i).querySelector('h4').textContent = finalists[i-1];
+    }
+
+    // populate the 1st/2nd place pickers with all 4 names, now that we know them
+    var placeOptions = finalists.map(function(n){ return '<option value="'+escapeHtml(n)+'">'+escapeHtml(n)+'</option>'; }).join('');
+    document.getElementById('firstPlaceSelect').innerHTML = placeOptions;
+    document.getElementById('secondPlaceSelect').innerHTML = placeOptions;
+    document.getElementById('secondPlaceSelect').selectedIndex = 1;
+
     markDone('stage5');
     unlockStage('stage6');
-    document.getElementById('finalScoreA').querySelector('h4').textContent = finalistA;
-    document.getElementById('finalScoreB').querySelector('h4').textContent = finalistB;
   });
 
   /* ---------------------------------------------------------
@@ -904,7 +948,6 @@
       round1Wheel.items.length + ' topic(s) remaining in the shared pool.';
   }
 
-  // populate final wheel whenever stage 5 unlocks stage 6
   var stage6Observer = new MutationObserver(function(){
     if(!document.getElementById('stage6').classList.contains('locked')){
       refreshFinalWheelFromPool();
@@ -919,12 +962,12 @@
       document.getElementById('finalTopicResult').textContent = 'Final Topic: '+winner;
       markDone('stage6');
       unlockStage('stage7');
-      showRevealModal('GRAND FINAL TOPIC', 'The finalists will debate:', winner);
+      showRevealModal('GRAND FINAL TOPIC', 'The two final teams will debate:', winner);
     });
   });
 
   /* ---------------------------------------------------------
-     STAGE 7 — FINAL TOSS
+     STAGE 7 — FINAL TOSS (Final Team 1 vs Final Team 2)
   --------------------------------------------------------- */
   var finalCoin = createCoin('finalCoinInner');
   var finalTossWinner = null;
@@ -934,7 +977,7 @@
     btn.disabled = true;
     finalCoin.flip(function(winner){
       finalTossWinner = winner;
-      var label = winner==='A' ? finalistA : finalistB;
+      var label = winner==='A' ? 'Final Team 1 ('+finalTeam1.join(' & ')+')' : 'Final Team 2 ('+finalTeam2.join(' & ')+')';
       document.getElementById('finalTossResult').textContent = label+' wins the toss!';
       document.getElementById('finalSideChoice').style.display = 'flex';
       btn.disabled = false;
@@ -947,8 +990,8 @@
     if(!btn) return;
     var chosen = btn.getAttribute('data-side');
     var other = chosen==='FOR' ? 'AGAINST' : 'FOR';
-    var winnerLabel = finalTossWinner==='A' ? finalistA : finalistB;
-    var otherLabel = finalTossWinner==='A' ? finalistB : finalistA;
+    var winnerLabel = finalTossWinner==='A' ? 'Final Team 1' : 'Final Team 2';
+    var otherLabel = finalTossWinner==='A' ? 'Final Team 2' : 'Final Team 1';
     document.getElementById('finalSideSummary').innerHTML =
       '<span class="side-tag '+(finalTossWinner==='A'?'a':'b')+'">'+winnerLabel+': '+chosen+'</span>'+
       '<span class="side-tag '+(finalTossWinner==='A'?'b':'a')+'">'+otherLabel+': '+other+'</span>';
@@ -958,40 +1001,38 @@
   });
 
   /* ---------------------------------------------------------
-     STAGE 8 — FINAL JURY & CHAMPION
+     STAGE 8 — FINAL JURY: score all 4 finalists, then pick 1st & 2nd
   --------------------------------------------------------- */
-  var finalPanelA = renderScorePanel('finalScoreA', 'f_a');
-  var finalPanelB = renderScorePanel('finalScoreB', 'f_b');
+  var finalPanels = [1,2,3,4].map(function(i){ return renderScorePanel('finalScore'+i, 'ff'+i); });
+  var firstPlaceSelect = document.getElementById('firstPlaceSelect');
+  var secondPlaceSelect = document.getElementById('secondPlaceSelect');
+  var placeError = document.getElementById('placeError');
 
-  document.getElementById('declareChampionBtn').addEventListener('click', function(){
-    var totalA = finalPanelA.getTotal();
-    var totalB = finalPanelB.getTotal();
-    var verdict = document.getElementById('finalVerdict');
-    var tiebreak = document.getElementById('finalTiebreak');
-    verdict.textContent = (finalistA||'Finalist A')+': '+totalA.toFixed(1)+'/10 — '+(finalistB||'Finalist B')+': '+totalB.toFixed(1)+'/10';
-    if(totalA === totalB){
-      verdict.textContent += '  (tie — judges must break it)';
-      tiebreak.style.display = 'flex';
-    } else {
-      var champion = totalA > totalB ? finalistA : finalistB;
-      crownChampion(champion);
-    }
-  });
-
-  document.getElementById('finalTiebreak').addEventListener('click', function(e){
-    var btn = e.target.closest('button[data-final]');
-    if(!btn) return;
-    var pick = btn.getAttribute('data-final');
-    var champion = pick==='A' ? finalistA : finalistB;
-    document.getElementById('finalTiebreak').style.display = 'none';
-    crownChampion(champion);
-  });
-
-  function crownChampion(champion){
-    document.getElementById('championLine').textContent = '🏆 Champion: '+champion;
-    markDone('stage8');
-    showRevealModal('🏆 GRAND FINAL CHAMPION', 'Congratulations to', champion);
+  function refreshScoreSummary(){
+    var ranked = finalists.map(function(name, idx){
+      return { name:name, total: finalPanels[idx] ? finalPanels[idx].getTotal() : 0 };
+    }).sort(function(a,b){ return b.total - a.total; });
+    document.getElementById('finalScoreSummary').textContent = ranked.map(function(r){
+      return r.name+': '+r.total.toFixed(1)+'/10';
+    }).join('   —   ');
   }
+  finalPanels.forEach(function(){ /* panels already wire their own input listeners */ });
+  // recompute the summary whenever any slider in stage 8 moves
+  document.getElementById('stage8').addEventListener('input', refreshScoreSummary);
+
+  document.getElementById('declareResultBtn').addEventListener('click', function(){
+    placeError.innerHTML = '';
+    var first = firstPlaceSelect.value, second = secondPlaceSelect.value;
+    if(!first || !second) return;
+    if(first === second){
+      placeError.innerHTML = '<div class="error-box">1st and 2nd place must be different speakers.</div>';
+      return;
+    }
+    document.getElementById('championLine').innerHTML =
+      '🥇 1st Place: '+first+'<br><span style="font-size:1.1rem;">🥈 2nd Place: '+second+'</span>';
+    markDone('stage8');
+    showRevealModal('🏆 GRAND FINAL RESULT', '1st Place Speaker:', first);
+  });
 
   /* ---------------------------------------------------------
      RESET
